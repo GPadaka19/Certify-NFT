@@ -1,3 +1,4 @@
+# Certify-NFT
 # Certificate Verification Web3 App - Architecture
 
 ## File & Folder Structure
@@ -99,8 +100,8 @@ Frontend ← The Graph ← Blockchain
 
 ## Deployment Model
 - Single VPS deployment (Docker containers)
-- Frontend: Static Next.js build (port 3000)
-- Backend: Node process (port 4000)
+- Frontend: Static Next.js build (port 3004)
+- Backend: Node process (port 8081)
 - Database: Managed PostgreSQL (external/container)
 - Blockchain: Polygon Mumbai via Alchemy RPC
 ⸻

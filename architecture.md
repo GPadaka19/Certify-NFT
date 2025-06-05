@@ -1,89 +1,108 @@
-Project Architecture: Influencer Endorsement Platform
+# Certificate Verification Web3 App - Architecture
 
-Overview
-
-This project consists of a frontend built with Next.js, a backend built with Go (if necessary), and a PostgreSQL database already running in a Portainer environment (port 5432). Each part is containerized separately and deployed via Docker Compose.
-
-⸻
-
-File and Folder Structure
+## File & Folder Structure
 
 project-root/
 │
-├── frontend/                    # Next.js frontend
-│   ├── public/                  # Static assets
+├── client/                  # Frontend (Next.js)
+│   ├── public/              # Static assets
 │   ├── src/
-│   │   ├── components/          # Reusable UI components
-│   │   ├── pages/               # Next.js pages
-│   │   ├── lib/                 # API helpers / utils
-│   │   ├── context/             # Global state management
-│   │   └── styles/              # Tailwind or CSS modules
-│   ├── .env.local               # Frontend environment config
-│   ├── Dockerfile               # Docker image definition
-│   └── docker-compose.yml       # Compose file for frontend
+│   │   ├── components/      # React components
+│   │   ├── contexts/        # State contexts
+│   │   ├── pages/
+│   │   └── utils/
+│   └── package.json
 │
-├── backend/                    # Optional Go backend API
-│   ├── cmd/
-│   │   └── server/              # Main Go application entry
-│   ├── internal/
-│   │   ├── handlers/            # HTTP route handlers
-│   │   ├── models/              # DB models and logic
-│   │   ├── middleware/          # JWT, CORS, etc.
-│   │   └── db/                  # PostgreSQL connection
-│   ├── .env                     # Backend environment config
-│   ├── go.mod / go.sum          # Go module definitions
-│   ├── Dockerfile               # Docker image definition
-│   └── docker-compose.yml       # Compose file for backend
+├── server/                  # Backend (Node.js/Express)
+│   ├── controllers/
+│   ├── services/
+│   ├── routes/
+│   ├── app.ts
+│   └── package.json
 │
-└── docs/                       # Documentation
-    ├── architecture.md
-    ├── tasks.md
-    └── req.md
+├── contracts/               # Smart Contracts
+│   ├── CertificateNFT.sol
+│   ├── artifacts/
+│   └── scripts/
+│
+├── .github/workflows/       # CI/CD (optional)
+│   └── deploy.yml
+│
+├── docker-compose.yml
+├── README.md
+└── architecture.md
+
+## System Components
+
+1. Frontend (Next.js):
+- Wallet connection
+- Certificate display
+- Verification UI
+
+2. Backend (Express):
+- API routes
+- IPFS upload service
+- Blockchain interaction
+
+3. Blockchain Layer:
+- ERC721 Smart Contract
+- Polygon Mumbai testnet
+- The Graph indexing
+
+## Service Connections
+
+Frontend → Backend → IPFS → Blockchain
+Frontend ← The Graph ← Blockchain
 
 
 ⸻
 
-What Each Part Does
+## What Each Part Does
 
-Frontend (Next.js)
-	•	Handles all user-facing pages (home, login, register, dashboards, profile views).
-	•	Communicates with backend API using REST (via fetch or axios).
-	•	Manages user session via context + cookies (or localStorage fallback).
-	•	Deployable as a standalone container via its own docker-compose.yml.
+### Frontend (Next.js)
+- Handles user authentication via wallet connection (MetaMask, WalletConnect)
+- Displays certificate NFTs with verification status
+- Provides UI for issuing new certificates (admin-only)
 
-Backend (Go, optional but used in this project)
-	•	Provides REST API endpoints for registration, login, profile management, admin features.
-	•	Implements role-based access via JWT.
-	•	Handles database interaction with PostgreSQL.
-	•	Deployable as a standalone container, with .env linking to external PostgreSQL instance.
+### Backend (Node.js/Express)
+- Processes API requests from frontend
+- Manages IPFS uploads of certificate metadata
+- Interfaces with blockchain via Alchemy RPC
+- Implements rate limiting and basic auth
 
-PostgreSQL (external)
-	•	Hosted in Portainer on port 5432.
-	•	Stores all persistent data: users, influencer profiles, performance metrics, categories.
+### Smart Contracts (Solidity)
+- ERC721 contract manages certificate NFTs
+- Stores immutable certificate metadata hashes
+- Implements issuer whitelisting and revocation
 
-⸻
+### The Graph
+- Indexes blockchain events (minting, transfers)
+- Enables efficient querying of certificates by owner/issuer
+- Provides historical data for verification
 
-Where State Lives
-	•	Frontend local state: React Context (auth, user info, theme, etc.)
-	•	Frontend persistent state: Cookies or secure localStorage for JWT tokens
-	•	Backend state: Stateless, with PostgreSQL holding all persistent data
+### PostgreSQL (external)
+- Stores user profiles (optional email/wallet mapping)
+- Caches frequently accessed certificate data
+- Maintains issuer authorization records
 
-⸻
+## Where State Lives
+- Blockchain: Permanent certificate records (token ownership, metadata URIs)
+- IPFS: Immutable certificate metadata (JSON files)
+- PostgreSQL: Ephemeral user data and cache
+- Frontend: Session state (connected wallet, UI preferences)
 
-How Services Connect
-	•	Frontend sends requests to the backend REST API (e.g., /api/login, /api/influencers)
-	•	Backend verifies JWT and queries PostgreSQL
-	•	Backend returns JSON responses to the frontend
-	•	All services are containerized and linked via Docker network (using service names)
+## How Services Connect
+- User auth: Frontend ↔ Wallet ↔ Backend (signed messages)
+- Certificate issuance: Frontend → Backend → IPFS → Smart Contract
+- Verification: Frontend ↔ The Graph ↔ Smart Contract
+- Data caching: Backend ↔ PostgreSQL (optional)
 
-⸻
-
-Deployment Model
-	•	PostgreSQL is already running via Portainer (as base DB container)
-	•	frontend/docker-compose.yml and backend/docker-compose.yml run separately, connecting to shared DB
-	•	Use Docker Compose .env files to pass secrets and service URLs
-	•	Reverse proxy can be added later (e.g., Caddy, Traefik, Nginx) for SSL and routing
-
+## Deployment Model
+- Single VPS deployment (Docker containers)
+- Frontend: Static Next.js build (port 3000)
+- Backend: Node process (port 4000)
+- Database: Managed PostgreSQL (external/container)
+- Blockchain: Polygon Mumbai via Alchemy RPC
 ⸻
 
 This architecture ensures modularity, scalability, and clear separation of concerns between frontend, backend, and database.

@@ -1,109 +1,118 @@
-# Certify-NFT
-# Certificate Verification Web3 App - Architecture
+# Certify-NFT - System Architecture (Updated)
 
-## File & Folder Structure
+## Project Folder Structure
 
+```
 project-root/
 │
 ├── client/                  # Frontend (Next.js)
 │   ├── public/              # Static assets
 │   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── contexts/        # State contexts
-│   │   ├── pages/
-│   │   └── utils/
+│   │   ├── components/      # UI Components (WalletConnector, CertificateCard, etc.)
+│   │   ├── pages/           # Routes (/, /verify/[id], /admin)
+│   │   ├── utils/           # Helper functions
+│   │   └── contexts/        # React contexts (wallet state)
 │   └── package.json
 │
 ├── server/                  # Backend (Node.js/Express)
-│   ├── controllers/
-│   ├── services/
-│   ├── routes/
-│   ├── app.ts
+│   ├── routes/              # API routes
+│   ├── services/            # IPFS, contract, DB integrations
+│   ├── controllers/         # API logic
+│   ├── middleware/          # Auth, rate-limiting, CORS
+│   ├── config/              # Env and key configs
+│   ├── app.ts               # Entry point
 │   └── package.json
 │
-├── contracts/               # Smart Contracts
-│   ├── CertificateNFT.sol
-│   ├── artifacts/
-│   └── scripts/
+├── contracts/               # Smart Contracts (Solidity)
+│   ├── CertificateNFT.sol   # ERC721 with AccessControl, revoke
+│   ├── scripts/             # Deployment and setup scripts
+│   ├── artifacts/           # Compiled contracts
+│   └── hardhat.config.ts
 │
-├── .github/workflows/       # CI/CD (optional)
+├── subgraph/                # The Graph indexer
+│   ├── schema.graphql       # Certificate entity schema
+│   ├── subgraph.yaml        # Config
+│   └── mappings.ts          # Event handlers
+│
+├── .github/workflows/       # CI/CD workflows
 │   └── deploy.yml
 │
-├── docker-compose.yml
+├── docker-compose.yml       # Container orchestration
 ├── README.md
 └── architecture.md
+```
 
-## System Components
+---
 
-1. Frontend (Next.js):
-- Wallet connection
-- Certificate display
-- Verification UI
+## Components Overview
 
-2. Backend (Express):
-- API routes
-- IPFS upload service
-- Blockchain interaction
+### 1. Frontend (Next.js)
 
-3. Blockchain Layer:
-- ERC721 Smart Contract
-- Polygon Mumbai testnet
-- The Graph indexing
+* Connect wallet (RainbowKit + wagmi)
+* Display certificate NFTs with metadata
+* QR-based and tokenId verification UI
+* Admin page for certificate issuance (with wallet-based auth)
 
-## Service Connections
+### 2. Backend (Express)
 
-Frontend → Backend → IPFS → Blockchain
-Frontend ← The Graph ← Blockchain
+* REST API (mint, upload, verify)
+* Upload metadata to IPFS (via Web3.Storage/NFT.Storage)
+* Interact with smart contract (mint/revoke)
+* Optional: connect to PostgreSQL for user/email mapping and audit logs
+* Security: CORS, Helmet, Rate limiting, Signed wallet message auth
 
+### 3. Smart Contracts (Solidity)
 
-⸻
+* ERC721 (OpenZeppelin)
+* Role-based access control (ISSUER\_ROLE)
+* mintCertificate and revokeCertificate functions
+* Emits `CertificateMinted` and `CertificateRevoked` events
 
-## What Each Part Does
+### 4. The Graph
 
-### Frontend (Next.js)
-- Handles user authentication via wallet connection (MetaMask, WalletConnect)
-- Displays certificate NFTs with verification status
-- Provides UI for issuing new certificates (admin-only)
+* Index `CertificateMinted` and `CertificateRevoked`
+* Query certificates by owner, issuer, status
+* Used for `/verify/[tokenId]` and listing user certs
 
-### Backend (Node.js/Express)
-- Processes API requests from frontend
-- Manages IPFS uploads of certificate metadata
-- Interfaces with blockchain via Alchemy RPC
-- Implements rate limiting and basic auth
+### 5. PostgreSQL (Optional)
 
-### Smart Contracts (Solidity)
-- ERC721 contract manages certificate NFTs
-- Stores immutable certificate metadata hashes
-- Implements issuer whitelisting and revocation
+* Map user wallet to metadata (e.g., email)
+* Cache token metadata
+* Store audit log of mint/revoke actions
 
-### The Graph
-- Indexes blockchain events (minting, transfers)
-- Enables efficient querying of certificates by owner/issuer
-- Provides historical data for verification
+---
 
-### PostgreSQL (external)
-- Stores user profiles (optional email/wallet mapping)
-- Caches frequently accessed certificate data
-- Maintains issuer authorization records
+## Data Flow
 
-## Where State Lives
-- Blockchain: Permanent certificate records (token ownership, metadata URIs)
-- IPFS: Immutable certificate metadata (JSON files)
-- PostgreSQL: Ephemeral user data and cache
-- Frontend: Session state (connected wallet, UI preferences)
+### Certificate Issuance
 
-## How Services Connect
-- User auth: Frontend ↔ Wallet ↔ Backend (signed messages)
-- Certificate issuance: Frontend → Backend → IPFS → Smart Contract
-- Verification: Frontend ↔ The Graph ↔ Smart Contract
-- Data caching: Backend ↔ PostgreSQL (optional)
+1. Admin fills form in frontend
+2. Frontend calls backend `/api/mint`
+3. Backend:
+
+   * Uploads metadata to IPFS
+   * Calls `mintCertificate` on smart contract
+4. The Graph indexes event
+5. Frontend fetches certs from The Graph
+
+### Certificate Verification
+
+1. User opens `/verify/[tokenId]`
+2. Frontend fetches metadata from tokenURI
+3. Queries The Graph for issuer/ownership
+4. Displays valid/invalid with cert info
+
+---
 
 ## Deployment Model
-- Single VPS deployment (Docker containers)
-- Frontend: Static Next.js build (port 3004)
-- Backend: Node process (port 8081)
-- Database: Managed PostgreSQL (external/container)
-- Blockchain: Polygon Mumbai via Alchemy RPC
-⸻
 
-This architecture ensures modularity, scalability, and clear separation of concerns between frontend, backend, and database.
+* **Frontend**: Next.js static export, port 3004
+* **Backend**: Node.js Express, port 8081
+* **Database**: PostgreSQL (local or managed)
+* **Blockchain**: Polygon Sepolia
+* **IPFS**: NFT.Storage/Web3.Storage
+* **The Graph**: Hosted subgraph deployment
+
+---
+
+This architecture is built for flexibility and future scaling. It supports multiple issuers, secure minting, user-friendly verification, and strong data integrity through blockchain and IPFS.

@@ -26,8 +26,8 @@ project-root/
 ├── contracts/               # Smart Contracts (Solidity)
 │   ├── CertificateNFT.sol   # ERC721 with AccessControl, revoke
 │   ├── scripts/             # Deployment and setup scripts
-│   ├── artifacts/           # Compiled contracts
-│   └── hardhat.config.ts
+│   └── artifacts/           # Compiled contracts
+│   
 │
 ├── subgraph/                # The Graph indexer
 │   ├── schema.graphql       # Certificate entity schema

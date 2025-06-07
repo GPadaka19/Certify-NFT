@@ -1,11 +1,12 @@
-import express, { RequestHandler } from 'express'
+import express, { Request, RequestHandler, Response } from 'express'
 import multer from 'multer'
 import { uploadToIPFS } from '../services/ipfsService'
+import { getCertificatesByOwner } from '../services/certificateService'
 
 const router = express.Router()
-const upload = multer() // memory storage
+const upload = multer()
 
-const uploadHandler: RequestHandler = async (req, res) => {
+const uploadHandler: RequestHandler = async (req: Request, res: Response) => {
   try {
     const { name, description } = req.body
     const file = (req as any).file
@@ -15,19 +16,13 @@ const uploadHandler: RequestHandler = async (req, res) => {
       return
     }
 
-    // Upload image file ke IPFS
     const imageCid = await uploadToIPFS(file.buffer)
-
-    // Buat metadata JSON
-    const metadata = {
+    const metadata = { 
       name,
       description,
-      image: `ipfs://${imageCid}`
+      image: `ipfs://${imageCid}` 
     }
-
-    // Upload metadata JSON ke IPFS
     const metadataCid = await uploadToIPFS(JSON.stringify(metadata))
-
     const tokenURI = `ipfs://${metadataCid}`
 
     res.json({ tokenURI })
@@ -37,6 +32,21 @@ const uploadHandler: RequestHandler = async (req, res) => {
   }
 }
 
+const getCertificatesHandler = async (req: Request, res: Response) => {
+  try {
+    const { address } = req.params
+    if (!address) {
+      return res.status(400).json({ error: 'Missing address parameter' })
+    }
+    const certificates = await getCertificatesByOwner(address)
+    return res.json({ certificates })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: 'Failed to fetch certificates' })
+  }
+}
+
 router.post('/upload', upload.single('image'), uploadHandler)
+// router.get('/:address', getCertificatesHandler) // FIXME: Add this route
 
 export default router

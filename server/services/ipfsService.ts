@@ -1,14 +1,38 @@
 import { create, Client } from '@web3-storage/w3up-client'
+import dotenv from 'dotenv'
+import path from 'path'
 
-const w3upToken = process.env.W3UP_TOKEN || ''
+// Load .env from server directory
+dotenv.config({ path: path.resolve(__dirname, '../.env') })
+
+console.log('W3UP_TOKEN:', process.env.W3UP_TOKEN)
+console.log('W3UP_SPACE:', process.env.W3UP_SPACE)
+
+let cachedClient: Client | null = null
 
 async function getClient(): Promise<Client> {
+  if (cachedClient) return cachedClient
+
+  const w3upToken = process.env.W3UP_TOKEN
   if (!w3upToken) {
-    throw new Error('W3UP_TOKEN missing in env')
+    throw new Error('W3UP_TOKEN missing in environment variables')
   }
+
+  if (!w3upToken.includes('@')) {
+    throw new Error('W3UP_TOKEN must be a valid email address')
+  }
+
   const client = await create()
-  // The token should be in the format "did:key:..."
   await client.login(w3upToken as `${string}@${string}`)
+
+  const spaceDID = process.env.W3UP_SPACE
+  if (!spaceDID || !spaceDID.startsWith('did:key:')) {
+    throw new Error('W3UP_SPACE missing or invalid in environment variables')
+  }
+
+  await client.setCurrentSpace(spaceDID as `did:key:${string}`)
+
+  cachedClient = client
   return client
 }
 
@@ -16,9 +40,7 @@ export async function uploadToIPFS(content: File | Blob | Uint8Array | string): 
   const client = await getClient()
 
   let data: Blob
-  if (typeof content === 'string') {
-    data = new Blob([content])
-  } else if (content instanceof Uint8Array) {
+  if (typeof content === 'string' || content instanceof Uint8Array) {
     data = new Blob([content])
   } else {
     data = content

@@ -23,7 +23,6 @@ $files = @(
     "server/package.json",
     "server/app.ts",
     "contracts/CertificateNFT.sol",
-    "contracts/hardhat.config.ts",
     ".github/workflows/deploy.yml",
     "subgraph/schema.graphql",
     "subgraph/subgraph.yaml",

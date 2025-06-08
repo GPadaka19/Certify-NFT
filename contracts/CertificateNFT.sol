@@ -12,7 +12,6 @@ contract CertificateNFT is ERC721URIStorage, AccessControl {
     constructor() ERC721("CertificateNFT", "CERT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ISSUER_ROLE, msg.sender);
-        _tokenIdCounter = 0;
     }
 
     function mint(address to, string memory tokenURI) public onlyRole(ISSUER_ROLE) {
@@ -30,5 +29,4 @@ contract CertificateNFT is ERC721URIStorage, AccessControl {
     {
         return super.supportsInterface(interfaceId);
     }
-
 }

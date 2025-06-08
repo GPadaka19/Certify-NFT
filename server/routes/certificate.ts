@@ -36,17 +36,17 @@ const getCertificatesHandler = async (req: Request, res: Response) => {
   try {
     const { address } = req.params
     if (!address) {
-      return res.status(400).json({ error: 'Missing address parameter' })
+    res.status(400).json({ error: 'Missing address parameter' })
     }
     const certificates = await getCertificatesByOwner(address)
-    return res.json({ certificates })
+    res.json({ certificates })
   } catch (error) {
     console.error(error)
-    return res.status(500).json({ error: 'Failed to fetch certificates' })
+    res.status(500).json({ error: 'Failed to fetch certificates' })
   }
 }
 
 router.post('/upload', upload.single('image'), uploadHandler)
-// router.get('/:address', getCertificatesHandler) // FIXME: Add this route
+router.get('/:address', getCertificatesHandler)
 
 export default router

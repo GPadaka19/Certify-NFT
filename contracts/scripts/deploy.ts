@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from "hardhat"; 
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -8,7 +8,7 @@ async function main() {
   const contract = await CertificateNFT.deploy();
   await contract.waitForDeployment();
 
-  console.log("CertificateNFT deployed to:", await contract.getAddress());
+  console.log("CertificateNFT deployed to:", contract.target); // atau contract.address
 }
 
 main().catch((error) => {

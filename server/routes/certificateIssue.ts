@@ -26,13 +26,6 @@ router.post('/issue', upload.single('image'), async (req: Request, res: Response
       return
     }
 
-    // Debug logs
-    console.log('--- Incoming Form Data ---')
-    console.log('Name:', name)
-    console.log('Description:', description)
-    console.log('To:', to)
-    console.log('File info:', file?.originalname, file?.mimetype, file?.size)
-
     // 1. Upload image to IPFS
     const imageCid = await uploadToIPFS(file.buffer)
 

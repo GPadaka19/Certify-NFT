@@ -1,6 +1,6 @@
 import express from 'express'
-import certificateRoutes from './routes/certificate'
-import mintRoutes from './routes/mint'
+import issueRoutes from './routes/certificateIssue'
+import queryRoutes from './routes/certificateQuery'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -12,8 +12,10 @@ app.get('/', (req, res) => {
   res.send('Certify-NFT backend is running ✅')
 })
 
-app.use('/api/certificate', certificateRoutes)
-app.use('/api/mint', mintRoutes)
+app.use('/api/certificate', issueRoutes)
+app.use('/api/certificate', queryRoutes)
 
 const PORT = process.env.PORT || 4000
-app.listen(Number(PORT), () => console.log(`Server running on port http://localhost:${PORT}`))
+app.listen(Number(PORT), () =>
+  console.log(`Server running on port http://localhost:${PORT}`)
+)

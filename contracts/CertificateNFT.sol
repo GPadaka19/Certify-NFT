@@ -25,15 +25,6 @@ contract CertificateNFT is ERC721, ERC721URIStorage, AccessControl {
         emit CertificateIssued(to, tokenId, certificateType);
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(AccessControl, ERC721, ERC721URIStorage)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
-    }
-
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
     }
@@ -45,5 +36,14 @@ contract CertificateNFT is ERC721, ERC721URIStorage, AccessControl {
         returns (string memory)
     {
         return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(AccessControl, ERC721, ERC721URIStorage)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }

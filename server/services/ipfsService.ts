@@ -10,7 +10,7 @@ console.log('W3UP_SPACE:', process.env.W3UP_SPACE)
 
 let cachedClient: Client | null = null
 
-async function getClient(): Promise<Client> {
+export async function getClient(): Promise<Client> {
   if (cachedClient) return cachedClient
 
   const w3upToken = process.env.W3UP_TOKEN

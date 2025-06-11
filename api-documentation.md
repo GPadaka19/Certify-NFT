@@ -307,6 +307,73 @@ Verify the authenticity of a certificate.
 }
 ```
 
+### 5. Health Check
+Check the status of the server and its dependencies.
+
+**Endpoint:** `GET {{base_url}}{{api_path}}/health`
+
+**Example Request:**
+```json
+GET {{base_url}}{{api_path}}/health
+```
+
+**Response Codes:**
+
+1. **200 OK**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-03-21T12:34:56.789Z",
+  "services": {
+    "server": {
+      "status": "up",
+      "uptime": 123.45
+    },
+    "ipfs": {
+      "status": "up"
+    },
+    "blockchain": {
+      "status": "up"
+    }
+  }
+}
+```
+
+2. **200 OK (Degraded)**
+```json
+{
+  "status": "degraded",
+  "timestamp": "2024-03-21T12:34:56.789Z",
+  "services": {
+    "server": {
+      "status": "up",
+      "uptime": 123.45
+    },
+    "ipfs": {
+      "status": "down",
+      "error": "Failed to connect to IPFS node"
+    },
+    "blockchain": {
+      "status": "up"
+    }
+  }
+}
+```
+
+3. **500 Internal Server Error**
+```json
+{
+  "status": "unhealthy",
+  "timestamp": "2024-03-21T12:34:56.789Z",
+  "error": "Internal server error"
+}
+```
+
+**Status Meanings:**
+- `healthy`: All services are running normally
+- `degraded`: Some services are having issues but the server is still operational
+- `unhealthy`: Server is experiencing serious issues
+
 ## Error Handling
 All endpoints follow a consistent error response format:
 

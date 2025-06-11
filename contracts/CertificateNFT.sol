@@ -24,7 +24,7 @@ contract CertificateNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessCon
         emit CertificateIssued(to, tokenId, certificateType);
     }
 
-    // ✅ Required overrides for multiple inheritance
+    // Required overrides for multiple inheritance
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -55,5 +55,15 @@ contract CertificateNFT is ERC721, ERC721Enumerable, ERC721URIStorage, AccessCon
         returns (string memory)
     {
         return super.tokenURI(tokenId);
+    }
+
+    function verify(address owner, uint256 tokenId) public view returns (bool) 
+    {
+        return _exists(tokenId) && ownerOf(tokenId) == owner;
+    }
+
+    function getTokenURI(uint256 tokenId) public view returns (string memory) 
+    {
+        return tokenURI(tokenId);
     }
 }

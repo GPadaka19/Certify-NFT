@@ -16,9 +16,9 @@ app.get("/", (_, res) => {
   res.send("Certify-NFT Backend is running ✅");
 });
 
-// Mount API routes (nanti kita isi)
-import mintRouter from "./routes/mint";
-app.use("/api/mint", mintRouter);
+  // // Mount API routes (nanti kita isi)
+  // import mintRouter from "./routes/mint";
+  // app.use("/api/mint", mintRouter);
 
 // Start server
 app.listen(PORT, () => {

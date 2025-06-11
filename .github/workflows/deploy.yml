@@ -1,4 +1,4 @@
-name: Deploy Certify-NFT Backend
+name: CI/CD Certify-NFT Backend
 
 on:
   push:
@@ -7,39 +7,48 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to VPS via SSH
+    name: Deploy to VPS via Portainer
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Decode .env files from secrets
+        run: |
+          echo "${{ secrets.ENV_ROOT_B64 }}" | base64 -d > .env
+          echo "${{ secrets.ENV_SERVER_B64 }}" | base64 -d > server/.env
+
+      - name: Remove old folder, container, and image on VPS
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/gpadaka
+            docker rm -f certify-nft-be || true
+            docker rmi -f certify-nft-be || true
+            rm -rf certify-nft
 
-      - name: Copy project to VPS
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            rm -rf /home/gpadaka/certify-nft
-            docker stop certify-nft-be || true
-            docker rm certify-nft-be || true
-            docker rmi $(docker images -q --filter reference='certify-nft*') || true
-          EOF
+      - name: Copy project files to VPS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "."
+          target: "/home/gpadaka/certify-nft"
 
-          scp -r ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/gpadaka/certify-nft
-
-          - name: Decode and Upload .env files
-          run: |
-            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-              echo "${{ secrets.ENV_ROOT_B64 }}" | base64 -d > /home/gpadaka/certify-nft/.env
-              echo "${{ secrets.ENV_SERVER_B64 }}" | base64 -d > /home/gpadaka/certify-nft/server/.env
-            EOFta
-
-      - name: Docker Compose Up
-        run: |
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+      - name: Build & Compose on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
             cd /home/gpadaka/certify-nft
-            docker compose up -d --build
-          EOF
+            docker compose -f docker-compose.yml down
+            docker compose -f docker-compose.yml build
+            docker compose -f docker-compose.yml up -d
+            docker image prune -f

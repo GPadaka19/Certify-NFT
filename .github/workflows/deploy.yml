@@ -56,7 +56,7 @@ jobs:
     name: Notify Discord
     runs-on: ubuntu-latest
     needs: deploy
-    if: always()  # jalan meskipun job deploy gagal
+    if: always()
     steps:
       - name: Send Discord Notification
         env:

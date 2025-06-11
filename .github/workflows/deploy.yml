@@ -1,4 +1,4 @@
-name: Build & Deploy Backend
+name: Deploy Certify-NFT Backend
 
 on:
   push:
@@ -7,126 +7,39 @@ on:
 
 jobs:
   deploy:
-    name: Build & Deploy to VPS
+    name: Deploy to VPS via SSH
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          node-version: '20'
-          cache: 'npm'
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Install dependencies & build project
+      - name: Copy project to VPS
         run: |
-          npm install
-          npm run build
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            rm -rf /home/gpadaka/certify-nft
+            docker stop certify-nft-be || true
+            docker rm certify-nft-be || true
+            docker rmi $(docker images -q --filter reference='certify-nft*') || true
+          EOF
 
-      - name: Clean old project folder
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            rm -rf ~/Certify-NFT-BE
+          scp -r ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/gpadaka/certify-nft
 
-      - name: Copy package & docker files to VPS
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "Dockerfile,docker-compose.yml,nginx.conf,package.json,package-lock.json"
-          target: "~/Certify-NFT-BE"
+          - name: Decode and Upload .env files
+          run: |
+            ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+              echo "${{ secrets.ENV_ROOT_B64 }}" | base64 -d > /home/gpadaka/certify-nft/.env
+              echo "${{ secrets.ENV_SERVER_B64 }}" | base64 -d > /home/gpadaka/certify-nft/server/.env
+            EOFta
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/Certify-NFT-BE
-            sudo docker compose down
-            sudo docker compose build
-            sudo docker compose up -d
-            sudo docker image prune -f
-
-      - name: Send Discord notification (Success)
-        if: success()
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      - name: Docker Compose Up
         run: |
-          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
-          AUTHOR_NAME=$(git log -1 --pretty=format:"%an")
-          COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
-          
-          curl -s -X POST $DISCORD_WEBHOOK_URL \
-            -H "Content-Type: application/json" \
-            -d '{
-              "embeds": [{
-                "title": "✅ Deployment Successful",
-                "description": "Backend has been successfully deployed to VPS",
-                "color": 5763719,
-                "fields": [
-                  {
-                    "name": "Commit",
-                    "value": "'$COMMIT_MESSAGE'",
-                    "inline": true
-                  },
-                  {
-                    "name": "Author",
-                    "value": "'$AUTHOR_NAME'",
-                    "inline": true
-                  },
-                  {
-                    "name": "View Commit",
-                    "value": "'$COMMIT_URL'",
-                    "inline": true
-                  }
-                ],
-                "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"
-              }]
-            }'
-
-      - name: Send Discord notification (Failure)
-        if: failure()
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
-          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
-          AUTHOR_NAME=$(git log -1 --pretty=format:"%an")
-          COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
-          
-          curl -s -X POST $DISCORD_WEBHOOK_URL \
-            -H "Content-Type: application/json" \
-            -d '{
-              "embeds": [{
-                "title": "❌ Deployment Failed",
-                "description": "Backend deployment to VPS failed",
-                "color": 15548997,
-                "fields": [
-                  {
-                    "name": "Commit",
-                    "value": "'$COMMIT_MESSAGE'",
-                    "inline": true
-                  },
-                  {
-                    "name": "Author",
-                    "value": "'$AUTHOR_NAME'",
-                    "inline": true
-                  },
-                  {
-                    "name": "View Commit",
-                    "value": "'$COMMIT_URL'",
-                    "inline": true
-                  }
-                ],
-                "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"
-              }]
-            }'
-            
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd /home/gpadaka/certify-nft
+            docker compose up -d --build
+          EOF

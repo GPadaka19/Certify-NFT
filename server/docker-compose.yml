@@ -1,22 +1,20 @@
 services:
-  backend:
+  certify-nft-be:
+    container_name: certify-nft-be
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: certify-nft-backend
-    restart: unless-stopped
     ports:
       - "4000:4000"
-    environment:
-      - NODE_ENV=production
-      - PORT=4000
-      # Add other environment variables as needed
-      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
-      - PRIVATE_KEY=${PRIVATE_KEY}
-      - SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL}
+    restart: unless-stopped
+    env_file:
+      - .env
+      - ./server/.env
     networks:
       - certify-nft-network
+    working_dir: /app/server
+    command: npm run start
 
 networks:
   certify-nft-network:
-    driver: bridge 
+    external: true

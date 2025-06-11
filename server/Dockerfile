@@ -4,18 +4,19 @@ FROM node:20-alpine
 # Create app directory
 WORKDIR /usr/src/app
 
-# Install app dependencies
-COPY package*.json ./
-RUN npm ci
-
-# Bundle app source
+# Copy root files (including smart contracts & /.env)
 COPY . .
 
-# Build TypeScript
-RUN npm run build
+# Install dependencies
+RUN npm install
+WORKDIR /app/server
+RUN npm install
 
-# Expose port
+# Build smart contracts
+WORKDIR /app
+RUN npx hardhat compile
+
+# Start server
+WORKDIR /app/server
 EXPOSE 4000
-
-# Start the application
-CMD ["npm", "start"] 
+CMD ["npm", "run", "start"]

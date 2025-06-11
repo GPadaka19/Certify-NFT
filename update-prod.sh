@@ -9,7 +9,6 @@ git reset --hard dev
 # Force push to remote prod
 git push -f origin prod
 
-git checkout dev
-
-
 echo "Production branch has been updated successfully!" 
+
+git checkout dev

@@ -30,7 +30,7 @@ router.post('/mint', upload.none(), async (req: Request, res: Response): Promise
 
     const txHash = await mintCertificate(to, tokenURI, certificateType)
 
-    res.status(200).json({
+    res.status(201).json({
       message: 'Minting successful',
       to,
       tokenURI,
@@ -44,6 +44,37 @@ router.post('/mint', upload.none(), async (req: Request, res: Response): Promise
     console.error('Error message:', (error as Error).message)
     console.error('Error stack:', (error as Error).stack)
     console.error('==================================')
+
+    if (error instanceof Error) {
+      if (error.message.includes('insufficient funds')) {
+        res.status(400).json({
+          error: 'Insufficient funds for minting',
+          details: error.message
+        })
+        return
+      }
+      if (error.message.includes('user rejected')) {
+        res.status(400).json({
+          error: 'Transaction rejected by user',
+          details: error.message
+        })
+        return
+      }
+      if (error.message.includes('invalid address')) {
+        res.status(400).json({
+          error: 'Invalid wallet address',
+          details: error.message
+        })
+        return
+      }
+      if (error.message.includes('network')) {
+        res.status(503).json({
+          error: 'Blockchain network unavailable',
+          details: error.message
+        })
+        return
+      }
+    }
 
     res.status(500).json({
       error: 'Minting failed',

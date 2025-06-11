@@ -36,13 +36,29 @@ router.post('/upload', upload.single('image'), async (req: Request, res: Respons
     const metadataCid = await uploadToIPFS(JSON.stringify(metadata))
     const tokenURI = `ipfs://${metadataCid}`
 
-    res.status(200).json({
+    res.status(201).json({
       message: 'Upload successful',
       tokenURI,
       certificateType: description,
     })
   } catch (error) {
     console.error('Upload failed:', error)
+    if (error instanceof Error) {
+      if (error.message.includes('IPFS')) {
+        res.status(503).json({
+          error: 'IPFS service unavailable',
+          details: error.message
+        })
+        return
+      }
+      if (error.message.includes('invalid file')) {
+        res.status(400).json({
+          error: 'Invalid file format',
+          details: error.message
+        })
+        return
+      }
+    }
     res.status(500).json({
       error: 'Internal server error during upload',
       details: error instanceof Error ? error.message : String(error),

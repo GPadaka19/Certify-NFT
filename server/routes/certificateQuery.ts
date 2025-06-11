@@ -12,10 +12,34 @@ router.get('/:address', async (req: Request, res: Response): Promise<void> => {
     }
 
     const certificates = await getCertificatesByOwner(address)
-    res.json({ certificates })
-    return
+    
+    if (!certificates || certificates.length === 0) {
+      res.status(404).json({ 
+        error: 'No certificates found',
+        address 
+      })
+      return
+    }
+
+    res.status(200).json({ certificates })
   } catch (err) {
     console.error('Query failed:', err)
+    if (err instanceof Error) {
+      if (err.message.includes('invalid address')) {
+        res.status(400).json({ 
+          error: 'Invalid address format',
+          details: err.message 
+        })
+        return
+      }
+      if (err.message.includes('network')) {
+        res.status(503).json({
+          error: 'Blockchain network unavailable',
+          details: err.message
+        })
+        return
+      }
+    }
     res.status(500).json({ error: 'Failed to fetch certificates' })
   }
 })

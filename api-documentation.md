@@ -39,7 +39,7 @@ Upload image and metadata to IPFS.
 {
   "name": "Web3 Development Certificate",
   "description": "Certificate of Completion for Web3 Development Course",
-  "image": "base64_encoded_image_data"
+  "image": "Certificate.pdf"
 }
 ```
 

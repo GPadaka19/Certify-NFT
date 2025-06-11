@@ -34,13 +34,13 @@ jobs:
           script: |
             rm -rf ~/certify-nft-be
 
-      - name: Copy dist & docker files to VPS
+      - name: Copy package & docker files to VPS
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist,Dockerfile,docker-compose.yml,nginx.conf"
+          source: "Dockerfile,docker-compose.yml,nginx.conf,package.json,package-lock.json"
           target: "~/certify-nft-be"
 
       - name: Deploy via SSH

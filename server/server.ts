@@ -11,16 +11,16 @@ const app = express()
 app.use(express.json())
 
 app.get('/', (req, res) => {
-  res.send(`
-    Certify-NFT backend is running ✅
-
-    Use:
-    - POST /api/certificate/upload  → Upload image & metadata
-    - POST /api/certificate/mint    → Mint certificate
-    - GET  /api/certificate/:address → View certificates
-    - GET  /api/certificate/verify?address=...&tokenId=... → Verify
-  `)
-})
+  res.json({
+    message: "Certify-NFT backend is running ✅",
+    usage: {
+      upload: "POST /api/certificate/upload → Upload image & metadata",
+      mint: "POST /api/certificate/mint → Mint certificate",
+      view: "GET /api/certificate/:address → View certificates",
+      verify: "GET /api/certificate/verify?address=...&tokenId=... → Verify"
+    }
+  });
+});
 
 app.use('/api/certificate', verifyRoutes)
 app.use('/api/certificate', queryRoutes)

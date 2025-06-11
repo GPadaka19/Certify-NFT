@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            rm -rf ~/certify-nft-be
+            rm -rf ~/Certify-NFT-BE
 
       - name: Copy package & docker files to VPS
         uses: appleboy/scp-action@v0.1.4
@@ -41,7 +41,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "Dockerfile,docker-compose.yml,nginx.conf,package.json,package-lock.json"
-          target: "~/certify-nft-be"
+          target: "~/Certify-NFT-BE"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -50,7 +50,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/certify-nft-be
+            cd ~/Certify-NFT-BE
             sudo docker compose down
             sudo docker compose build
             sudo docker compose up -d

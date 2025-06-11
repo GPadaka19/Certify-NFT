@@ -32,7 +32,7 @@ Upload image and metadata to IPFS.
 |-------|------|----------|-------------|
 | name | string | Yes | Name of the certificate |
 | description | string | Yes | Description of the certificate |
-| image | file | Yes | Certificate image file (PNG/JPG) |
+| image | file | Yes | Certificate file (PDF/PNG/JPG) |
 
 **Example Request:**
 ```json
@@ -70,7 +70,7 @@ Upload image and metadata to IPFS.
 ```json
 {
   "error": "Invalid file format",
-  "details": "Only PNG and JPG files are allowed"
+  "details": "Only PDF, PNG, and JPG files are allowed"
 }
 ```
 
@@ -323,7 +323,7 @@ No rate limiting implemented.
 ## Notes
 - All timestamps are in UTC
 - All addresses should be valid Ethereum addresses
-- Image files should be in PNG or JPG format
+- Certificate files can be in PDF, PNG, or JPG format
 - Maximum file size for uploads is 5MB
 
 ## Environment Setup

@@ -11,7 +11,6 @@ services:
       - .env
     networks:
       - certify-nft-network
-    working_dir: /app/server
     command: npm run start
 
 networks:

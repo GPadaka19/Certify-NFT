@@ -72,20 +72,20 @@ jobs:
           fi
 
           curl -H "Content-Type: application/json" \
-            -X POST \
-            -d '{
-              "username": "Certify-NFT",
-              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-              "embeds": [{
-                "title": "'"$STATUS"'",
-                "description": "Backend deployment to VPS **'"$STATUS"'**",
-                "color": '"$COLOR"',
-                "fields": [
-                  { "name": "Commit", "value": "'"${{ github.event.head_commit.message }}"'" },
-                  { "name": "Author", "value": "'"${{ github.actor }}"'" },
-                  { "name": "View Commit", "value": "'"$COMMIT_URL"'" }
-                ],
-                "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"
-              }]
-            }' \
-            $DISCORD_WEBHOOK_URL
+          -X POST \
+          -d '{
+            "username": "Certify-NFT",
+            "avatar_url": "https://github.com/'"${{ github.actor }}"'.png",
+            "embeds": [{
+              "title": "'"$STATUS"'",
+              "description": "Backend deployment to VPS **'"$STATUS"'**",
+              "color": '"$COLOR"',
+              "fields": [
+                { "name": "Commit", "value": "'"${{ github.event.head_commit.message }}"'" },
+                { "name": "Author", "value": "'"${{ github.actor }}"'" },
+                { "name": "View Commit", "value": "'"$COMMIT_URL"'" }
+              ],
+              "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"
+            }]
+          }' \
+          $DISCORD_WEBHOOK_URL

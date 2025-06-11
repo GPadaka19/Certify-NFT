@@ -1,12 +1,19 @@
 import { ethers } from 'ethers'
+import { isAddress } from 'ethers'
 import dotenv from 'dotenv'
+import abi from '../../artifacts/contracts/CertificateNFT.sol/CertificateNFT.json'
+
 dotenv.config()
 
 const contractAddress = process.env.CONTRACT_ADDRESS || ''
 const privateKey = process.env.PRIVATE_KEY || ''
 const rpcUrl = process.env.SEPOLIA_RPC_URL || ''
 
-import abi from '../../artifacts/contracts/CertificateNFT.sol/CertificateNFT.json'
+console.log('🚀 === MINTSERVICE.TS LOADED ===')
+console.log('Contract Address:', contractAddress)
+console.log('RPC URL:', rpcUrl)
+console.log('Private Key length:', privateKey.length)
+console.log('===================================')
 
 const provider = new ethers.JsonRpcProvider(rpcUrl)
 const wallet = new ethers.Wallet(privateKey, provider)
@@ -17,14 +24,49 @@ export async function mintCertificate(
   tokenURI: string,
   certificateType: string
 ): Promise<string> {
+  console.log('🔥 === MINT CERTIFICATE FUNCTION CALLED ===')
+  console.log('Arguments received:', arguments)
+  console.log('to:', to, typeof to)
+  console.log('tokenURI:', tokenURI, typeof tokenURI)
+  console.log('certificateType:', certificateType, typeof certificateType)
+  console.log('=============================================')
+  
   try {
-    const tx = await contract.mint(to, tokenURI, certificateType)
+    // Force validation
+    if (to === 'mint') {
+      console.error('🚨 FOUND THE BUG: to parameter is "mint"!')
+      throw new Error('Parameter "to" cannot be "mint" - it must be an Ethereum address')
+    }
+
+    if (!isAddress(to)) {
+      console.error('🚨 Invalid address:', to)
+      throw new Error(`Invalid Ethereum address: ${to}`)
+    }
+
+    console.log('✅ Validation passed, calling contract.mint()...')
+    
+    const tx = await contract["mint(address,string,string)"](to, tokenURI, certificateType)
     await tx.wait()
 
-    console.log(`Minted NFT to ${to} with tx hash: ${tx.hash}`)
+    console.log(`✅ Minted NFT to ${to} with tx hash: ${tx.hash}`)
     return tx.hash
   } catch (err) {
-    console.error('Minting failed:', err)
-    throw new Error('Minting certificate failed')
+    console.error('❌ === MINT ERROR ===')
+    console.error('Error:', err)
+    console.error('Error type:', typeof err)
+    console.error('Error constructor:', err?.constructor?.name)
+    if (err instanceof Error) {
+      console.error('Error message:', err.message)
+      console.error('Error stack:', err.stack)
+    }
+    console.error('==================')
+    
+    throw err
   }
+}
+
+// Test function untuk debug
+export function testMintService() {
+  console.log('🧪 Test MintService called')
+  return 'MintService is working'
 }

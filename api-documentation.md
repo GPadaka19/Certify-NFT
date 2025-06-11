@@ -35,11 +35,12 @@ Upload image and metadata to IPFS.
 | image | file | Yes | Certificate image file (PNG/JPG) |
 
 **Example Request:**
-```bash
-curl -X POST {{base_url}}{{api_path}}/upload \
-  -F "name=Web3 Development Certificate" \
-  -F "description=Certificate of Completion for Web3 Development Course" \
-  -F "image=@certificate.png"
+```json
+{
+  "name": "Web3 Development Certificate",
+  "description": "Certificate of Completion for Web3 Development Course",
+  "image": "base64_encoded_image_data"
+}
 ```
 
 **Response Codes:**
@@ -104,14 +105,12 @@ Mint a new certificate NFT.
 | certificateType | string | Yes | Type of certificate |
 
 **Example Request:**
-```bash
-curl -X POST {{base_url}}{{api_path}}/mint \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": "0x123...",
-    "tokenURI": "{{ipfs_gateway}}QmX...",
-    "certificateType": "Certificate of Completion"
-  }'
+```json
+{
+  "to": "0x123...",
+  "tokenURI": "{{ipfs_gateway}}QmX...",
+  "certificateType": "Certificate of Completion"
+}
 ```
 
 **Response Codes:**
@@ -177,8 +176,10 @@ Get all certificates owned by an address.
 **Endpoint:** `GET {{base_url}}{{api_path}}/:address`
 
 **Example Request:**
-```bash
-curl {{base_url}}{{api_path}}/0x123...
+```json
+{
+  "address": "0x123..."
+}
 ```
 
 **Response Codes:**
@@ -244,8 +245,11 @@ Verify the authenticity of a certificate.
 | tokenId | string | Yes | Certificate token ID |
 
 **Example Request:**
-```bash
-curl "{{base_url}}{{api_path}}/verify?address=0x123...&tokenId=1"
+```json
+{
+  "address": "0x123...",
+  "tokenId": "1"
+}
 ```
 
 **Response Codes:**

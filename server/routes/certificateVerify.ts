@@ -5,34 +5,24 @@ const router = express.Router()
 
 router.get('/verify', async (req: Request, res: Response): Promise<void> => {
   console.log('=== VERIFY ENDPOINT HIT ===')
-  console.log('Full URL:', req.url)
-  console.log('Method:', req.method)
+  console.log('Query params:', req.query)
   
   const { address, tokenId } = req.query
   
-  console.log('Raw query:', req.query)
-  console.log('Address received:', address)
-  console.log('TokenId received:', tokenId)
-  
   if (!address || !tokenId) {
-    res.status(400).json({ error: 'Missing address or tokenId' })
+    res.status(400).json({ 
+      error: 'Missing required parameters',
+      details: 'Both address and tokenId are required'
+    })
     return
   }
   
   try {
     const result = await verifyCertificate(address as string, tokenId as string)
     
-    if (!result) {
+    if (!result.isValid) {
       res.status(404).json({
         error: 'Certificate verification failed',
-        details: 'No result returned from verification service'
-      })
-      return
-    }
-
-    if (!result.valid) {
-      res.status(404).json({
-        error: 'Certificate not found or invalid',
         details: result.error
       })
       return
@@ -41,30 +31,10 @@ router.get('/verify', async (req: Request, res: Response): Promise<void> => {
     res.status(200).json(result)
   } catch (err) {
     console.error('Verification failed:', err)
-    if (err instanceof Error) {
-      if (err.message.includes('invalid token ID')) {
-        res.status(404).json({ 
-          error: 'Certificate not found',
-          details: err.message 
-        })
-        return
-      }
-      if (err.message.includes('invalid address')) {
-        res.status(400).json({
-          error: 'Invalid wallet address',
-          details: err.message
-        })
-        return
-      }
-      if (err.message.includes('network')) {
-        res.status(503).json({
-          error: 'Blockchain network unavailable',
-          details: err.message
-        })
-        return
-      }
-    }
-    res.status(500).json({ error: 'Verification failed' })
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: err instanceof Error ? err.message : 'Unknown error occurred'
+    })
   }
 })
 

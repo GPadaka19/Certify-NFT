@@ -1,3 +1,14 @@
+// Add unhandled rejection handler to catch ENS errors
+process.on('unhandledRejection', (reason, promise) => {
+  if (reason instanceof Error && reason.message.includes('network does not support ENS')) {
+    console.log('🚨 ENS Error caught from unhandled rejection:');
+    console.log('📍 Stack trace:');
+    console.log(reason.stack?.split('\n').slice(0, 15).join('\n'));
+    console.log('================================');
+  }
+});
+
+// Rest of your server.ts code
 import express from 'express'
 import cors from 'cors'
 import queryRoutes from './routes/certificateQuery'

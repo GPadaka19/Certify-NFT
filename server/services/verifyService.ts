@@ -1,45 +1,67 @@
 import { ethers } from 'ethers'
 import dotenv from 'dotenv'
-import abi from '../../artifacts/contracts/CertificateNFT.sol/CertificateNFT.json'
+import abi from "../../artifacts/contracts/CertificateNFT.sol/CertificateNFT.json"
 
 dotenv.config()
 
+// Debug logging
+console.log('=== VERIFY SERVICE INITIALIZATION ===')
+console.log('Contract Address:', process.env.CONTRACT_ADDRESS)
+// console.log('RPC URL:', process.env.SEPOLIA_RPC_URL)
+console.log('ABI loaded:', !!abi.abi)
+console.log('===================================')
+
 const contractAddress = process.env.CONTRACT_ADDRESS!
-const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL)
+const rpcUrl = process.env.SEPOLIA_RPC_URL!
+
+// Initialize provider with proper network configuration for Sepolia Ethereum
+const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, {
+  name: 'sepolia',
+  chainId: 11155111, // Sepolia Ethereum chainId
+  ensAddress: undefined // Disable ENS
+})
+
+// Test provider connection
+provider.getNetwork().then(network => {
+  console.log('Connected to network:', network)
+  if (network.chainId !== 11155111) {
+    console.error('Warning: Connected to wrong network. Expected Sepolia (11155111) but got:', network.chainId)
+  }
+}).catch(error => {
+  console.error('Provider connection error:', error)
+})
+
+// Initialize contract
 const contract = new ethers.Contract(contractAddress, abi.abi, provider)
 
 export async function verifyCertificate(address: string, tokenId: string) {
   try {
     console.log(`Verifying certificate - Address: ${address}, TokenId: ${tokenId}`)
     
-    // Step 1: Cek apakah sertifikat valid untuk address ini
-    const isValid = await contract.verify(address, tokenId)
+    // Validate address format
+    if (!ethers.utils.isAddress(address)) {
+      throw new Error(`Invalid Ethereum address format: ${address}`)
+    }
+
+    // Convert tokenId to number if it's a string
+    const numericTokenId = typeof tokenId === 'string' ? parseInt(tokenId, 10) : tokenId
+    
+    // Check if certificate is valid for this address
+    const isValid = await contract.verify(address, numericTokenId)
     console.log(`Verification result: ${isValid}`)
     
-    // Step 2: Dapatkan tokenURI - coba kedua fungsi
-    let tokenURI: string
-    try {
-      tokenURI = await contract.tokenURI(tokenId)
-      console.log(`TokenURI from tokenURI(): ${tokenURI}`)
-    } catch (uriError) {
-      console.log('tokenURI() failed, trying getTokenURI()...')
-      try {
-        tokenURI = await contract.getTokenURI(tokenId)
-        console.log(`TokenURI from getTokenURI(): ${tokenURI}`)
-      } catch (getUriError) {
-        console.log('Both tokenURI methods failed:', { uriError, getUriError })
-        return {
-          tokenId,
-          address,
-          isValid,
-          error: 'Could not retrieve token metadata',
-          tokenURI: null,
-          metadata: null,
-        }
+    if (!isValid) {
+      return {
+        isValid: false,
+        error: 'Certificate is not valid for this address'
       }
     }
-    
-    // Step 3: Fetch metadata dari IPFS
+
+    // Get tokenURI
+    const tokenURI = await contract.tokenURI(numericTokenId)
+    console.log(`TokenURI: ${tokenURI}`)
+
+    // Fetch metadata from IPFS
     let metadata = null
     if (tokenURI) {
       try {
@@ -50,8 +72,6 @@ export async function verifyCertificate(address: string, tokenId: string) {
         if (metadataRes.ok) {
           metadata = await metadataRes.json()
           console.log('Metadata retrieved successfully')
-        } else {
-          console.log('Failed to fetch metadata from IPFS')
         }
       } catch (metadataError) {
         console.log('Error fetching metadata:', metadataError)
@@ -59,45 +79,41 @@ export async function verifyCertificate(address: string, tokenId: string) {
     }
 
     return {
-      tokenId,
+      isValid: true,
+      tokenId: numericTokenId,
       address,
-      isValid,
       tokenURI,
-      metadata,
+      metadata
     }
-  } 
-  
-  catch (err) {
+  } catch (err) {
     console.error('Verification error:', err)
-    try {
-      // Your existing contract call code here
-    } catch (err: unknown) {
-      // Type guard to check if err is an Error-like object
-      if (err && typeof err === 'object') {
-        const error = err as any; // Cast to any for property access
-        
-        // Check for specific error types
-        if (error.reason === 'ERC721: invalid token ID') {
-          return {
-            valid: false,
-            error: 'Invalid token ID'
-          };
-        }
-        
-        if (error.code === 'CALL_EXCEPTION') {
-          return {
-            valid: false,
-            error: `Contract call failed: ${error.reason || 'Unknown error'}`
-          };
+    if (err instanceof Error) {
+      if (err.message.includes('invalid token ID')) {
+        return {
+          isValid: false,
+          error: 'Invalid token ID'
         }
       }
-      
-      // Handle generic errors
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      if (err.message.includes('invalid address')) {
+        return {
+          isValid: false,
+          error: 'Invalid Ethereum address'
+        }
+      }
+      if (err.message.includes('network')) {
+        return {
+          isValid: false,
+          error: 'Blockchain network unavailable'
+        }
+      }
       return {
-        valid: false,
-        error: `Verification failed: ${errorMessage}`
-      };
+        isValid: false,
+        error: err.message
+      }
+    }
+    return {
+      isValid: false,
+      error: 'Unknown verification error occurred'
     }
   }
 }

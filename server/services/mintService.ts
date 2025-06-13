@@ -1,5 +1,4 @@
-import { ethers } from 'ethers'
-import { isAddress } from 'ethers'
+import { ethers, providers } from 'ethers'
 import dotenv from 'dotenv'
 import abi from '../../artifacts/contracts/CertificateNFT.sol/CertificateNFT.json'
 
@@ -15,9 +14,24 @@ console.log('RPC URL:', rpcUrl)
 console.log('Private Key length:', privateKey.length)
 console.log('===================================')
 
-const provider = new ethers.JsonRpcProvider(rpcUrl)
+const provider = new providers.JsonRpcProvider(rpcUrl)
+
+// Test provider connection
+provider.getNetwork().then(network => {
+  console.log('Connected to network:', network)
+}).catch(error => {
+  console.error('Provider connection error:', error)
+})
+
 const wallet = new ethers.Wallet(privateKey, provider)
 const contract = new ethers.Contract(contractAddress, abi.abi, wallet)
+
+// Helper function to validate Ethereum address without ENS resolution
+function isValidEthereumAddress(address: string): boolean {
+  // Check if it's a valid hex string with 0x prefix and 40 hex characters
+  const addressRegex = /^0x[a-fA-F0-9]{40}$/
+  return addressRegex.test(address)
+}
 
 export async function mintCertificate(
   to: string,
@@ -38,7 +52,8 @@ export async function mintCertificate(
       throw new Error('Parameter "to" cannot be "mint" - it must be an Ethereum address')
     }
 
-    if (!isAddress(to)) {
+    // Use our custom validation function instead of ethers.utils.isAddress()
+    if (!isValidEthereumAddress(to)) {
       console.error('🚨 Invalid address:', to)
       throw new Error(`Invalid Ethereum address: ${to}`)
     }

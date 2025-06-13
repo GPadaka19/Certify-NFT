@@ -1,4 +1,6 @@
 import { uploadToIPFS } from './ipfsService'
+import { ethers, providers } from 'ethers'
+import CertificateNFTJson from '../../artifacts/contracts/CertificateNFT.sol/CertificateNFT.json'
 
 export async function createAndUploadMetadata(name: string, description: string, imageCid: string): Promise<string> {
   const metadata = {
@@ -12,9 +14,6 @@ export async function createAndUploadMetadata(name: string, description: string,
   return `ipfs://${cid}` // final tokenURI
 }
 
-import { ethers } from 'ethers'
-import CertificateNFTJson from '../../artifacts/contracts/CertificateNFT.sol/CertificateNFT.json'
-
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || ''
 
 export async function getCertificatesByOwner(ownerAddress: string): Promise<{ tokenId: string; tokenURI: string }[]> {
@@ -22,7 +21,7 @@ export async function getCertificatesByOwner(ownerAddress: string): Promise<{ to
     throw new Error('Contract address missing in env')
   }
 
-  const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL)
+  const provider = new providers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL)
   const contract = new ethers.Contract(CONTRACT_ADDRESS, CertificateNFTJson.abi, provider)
 
   // Fetch balance of NFTs owned

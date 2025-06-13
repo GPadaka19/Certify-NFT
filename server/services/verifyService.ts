@@ -18,8 +18,8 @@ const rpcUrl = process.env.SEPOLIA_RPC_URL!
 const provider = new ethers.providers.StaticJsonRpcProvider(rpcUrl, {
   name: 'sepolia',
   chainId: 11155111, // Sepolia Ethereum chainId
-  ensAddress: undefined // Disable ENS
-})
+  ensAddress: null // Disable ENS
+}as any)
 
 // Test provider connection
 provider.getNetwork().then(network => {
@@ -33,10 +33,13 @@ provider.getNetwork().then(network => {
 
 // Initialize contract
 const contract = new ethers.Contract(contractAddress, abi.abi, provider)
+console.log('Contract methods:', Object.keys(contract).filter(k => typeof contract[k] === 'function'))
 
 export async function verifyCertificate(address: string, tokenId: string) {
   try {
     console.log(`Verifying certificate - Address: ${address}, TokenId: ${tokenId}`)
+    const isValidAddress = ethers.utils.isAddress(address)
+    console.log('Is valid Ethereum address:', isValidAddress)
     
     // Validate address format
     if (!ethers.utils.isAddress(address)) {
@@ -47,6 +50,7 @@ export async function verifyCertificate(address: string, tokenId: string) {
     const numericTokenId = typeof tokenId === 'string' ? parseInt(tokenId, 10) : tokenId
     
     // Check if certificate is valid for this address
+    console.log('Calling contract.verify with:', address, numericTokenId)
     const isValid = await contract.verify(address, numericTokenId)
     console.log(`Verification result: ${isValid}`)
     

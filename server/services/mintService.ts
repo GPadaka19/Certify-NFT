@@ -16,13 +16,6 @@ console.log('===================================')
 
 const provider = new providers.JsonRpcProvider(rpcUrl)
 
-// Test provider connection
-provider.getNetwork().then(network => {
-  console.log('Connected to network:', network)
-}).catch(error => {
-  console.error('Provider connection error:', error)
-})
-
 const wallet = new ethers.Wallet(privateKey, provider)
 const contract = new ethers.Contract(contractAddress, abi.abi, wallet)
 

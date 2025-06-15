@@ -1,4 +1,4 @@
-import { ethers, providers } from 'ethers'
+import { ethers } from 'ethers'
 import dotenv from 'dotenv'
 import abi from '../../artifacts/contracts/CertificateNFT.sol/CertificateNFT.json'
 
@@ -14,7 +14,7 @@ console.log('RPC URL:', rpcUrl)
 console.log('Private Key length:', privateKey.length)
 console.log('===================================')
 
-const provider = new providers.JsonRpcProvider(rpcUrl)
+const provider = new ethers.JsonRpcProvider(rpcUrl)
 
 const wallet = new ethers.Wallet(privateKey, provider)
 const contract = new ethers.Contract(contractAddress, abi.abi, wallet)

@@ -8,10 +8,10 @@ async function main() {
 
   // Deploy the contract
   const certificateNFT = await CertificateNFT.deploy();
-  await certificateNFT.deployed();
+  await certificateNFT.waitForDeployment();
 
-  console.log("CertificateNFT deployed to:", certificateNFT.address);
-  console.log("Transaction hash:", certificateNFT.deployTransaction.hash);
+  const address = await certificateNFT.getAddress();
+  console.log("CertificateNFT deployed to:", address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

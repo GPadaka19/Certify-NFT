@@ -1,5 +1,5 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomiclabs/hardhat-waffle";
+// import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-ethers";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
@@ -7,6 +7,10 @@ import "dotenv/config";
 
 const config: HardhatUserConfig & { etherscan: { apiKey: string } } = {
   solidity: "0.8.28",
+  typechain: {
+    outDir: "typechain-types",
+    target: "ethers-v6",
+  },
   networks: {
     // Ethereum Sepolia Testnet (Sepolia)
     sepolia: {
